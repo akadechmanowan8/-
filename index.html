@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ระบบแบ่งเงิน</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a111b;--panel:#0f1d33;--tile:#101b2b;--line:#1f3250;--tx:#e8eef7;--mut:#8696ad;--gold:#e8b94a;--grn:#2ecc8f;--red:#e5604d;--blu:#4a8df0;color-scheme:dark;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:'IBM Plex Sans Thai',system-ui,sans-serif;line-height:1.5}
+main{max-width:520px;margin:0 auto;padding:22px 16px 40px}
+h1{font-size:26px;margin:4px 0 16px;font-weight:700}
+.card{background:linear-gradient(180deg,var(--panel),#0d1626);border:1px solid var(--line);border-radius:26px;padding:18px;margin-top:16px}
+.mono,input{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+label.cap{display:block;color:var(--mut);font-size:14px}
+input,select{width:100%;background:transparent;border:0;border-bottom:1px dashed #3a5a8c;color:var(--tx);font:inherit;padding:6px 0;outline:0}
+input{font-weight:700;font-size:20px}
+#income{font-size:38px;color:var(--gold)}
+select{font-size:16px;background:var(--tile);margin-top:4px}
+input:focus,select:focus{border-bottom:1px solid var(--gold)}
+.bar{display:flex;height:16px;border-radius:99px;overflow:hidden;background:#16243a;margin:16px 0 6px}
+.bar i{display:block;height:100%;transition:width .3s}
+.item{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.item:last-of-type{border:0}
+.sw{width:12px;height:36px;border-radius:6px;flex:none}
+.item .t{flex:1;min-width:0}.item .t b{display:block;font-size:16px}.item .t small{color:var(--mut);font-size:12.5px}
+.item .a{font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:700;font-size:22px;white-space:nowrap}
+.item.big .a{font-size:26px;color:var(--grn)}
+.tot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:10px 14px;border-radius:14px;background:var(--tile);border:1px solid var(--line);font-size:14px}.tot b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:18px;color:var(--gold)}
+.rec{margin-top:12px;padding:12px 14px;border-radius:14px;border:1px solid #5b4a86;background:#1a1530;font-size:14px;color:#d9ccf7}.chk{display:flex;gap:12px;align-items:center;padding:12px 2px;cursor:pointer;font-size:15px}.chk input{width:22px;height:22px;accent-color:#b58cf0;flex:none}
+.status{border-radius:16px;padding:13px;text-align:center;font-weight:600;margin-top:6px}
+.ok{background:#12382d;color:var(--grn)}.bad{background:#411b19;color:#ff9a8b}
+.note{color:var(--mut);font-size:13px;margin:8px 2px 0}
+details.set{margin-top:16px;border:1px solid var(--line);border-radius:20px;padding:4px 16px;background:var(--tile)}
+summary{cursor:pointer;padding:12px 0;font-weight:600;list-style:none}
+summary::-webkit-details-marker{display:none}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:12px}
+.tile{border:1px solid #3a5a8c;border-radius:14px;padding:10px 12px;min-width:0}
+.tile label{display:block;color:var(--mut);font-size:12.5px}.tile input{font-size:17px}
+details.p{border:1px solid var(--line);border-radius:14px;margin-bottom:8px;padding:0 12px}
+details.p summary{display:flex;justify-content:space-between;font-size:14px}
+details.p summary span:last-child{color:var(--gold);font-family:'JetBrains Mono',ui-monospace,monospace}
+button{font:inherit;cursor:pointer;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--tx);padding:10px 16px;width:100%;margin:6px 0 12px}
+button.warn{border-color:var(--red);color:#ff9a8b}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+<meta name="theme-color" content="#0a111b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="แบ่งเงิน">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAEuUlEQVR42u3dMY7TQBSA4axFRUe1EhRINEg0HICSE9BRUHIAjsIBKCnoOAElB6BBokGiQeIWFDRos/ZOnNjz3pvvb2OJzfD5jbObOFf3Hzw6SGubLIEAEkACSABJAAkgASSAJIAEkAASQBJAAkgACSAJIAEkgASQAJIAEkACSABJAAkgASSAJIC0Rfcswb9+fnp+0vFPXn+zaIfD4WrMG0ydygUpgDZBA1N9QHu6GVBSZUB96QzCqCCgdW6evv1z0vE/PlyTVA3QSXROFXNBT5UYFQHUSOeyaM7EVINRekAtdPZxs05Sdka5AS3r6eXmVEmpDWUFlIVOeUYpAS3oiUmnkVFGQ8kApaZTklEmQHN6ctFpYZTI0ERPx+Z++Di/Q68wgUrSKTOKJnqMorKABtGT2lDcLezWhStJp2U7C7uXTfSkGEVh59BED0OlANGTy9BED0OVX8YPqyfL0w8E6PjcGlzP3CKEGkITPQylB0RPXkM+G6/kgIyf1ENoooehOlsYPemWqCegRG+bilzfZZziPG3jJ+NGNoVdFKVYrj53KBtw83r8+c3Co79efTx/Sbu8Z2hyPnXX03JA2EXrAGi08dOIY4WhCAvbfwK5+km9dHsD8tK92PJOziFDqMLLeCVtV0A3Bqzxs8UQ2nkXM4GUBJDL55JL3W0C2b9qLKYtTBkA2b+q7mJ9JpD9q8yS2sJ0VuN+4dz3lw8XHn325TccUSZQwAugZT0tB7gM6raFdb8AasSRzlCXhXUNJIAEkAASQNu/FvArxD2vo3d4IWYCCSABJIAEkASQAFKa0r+d48W7LwuPfn3/0v+xCbRST8sBGhdQIw6GABJAAkgCSAApUpv/HujJ62//vyvlx4fr7G8JuvVblf/V/and+Nl2uG+rCXQxPXc+aguj5/oixwAkAaSkgAa8UCi8sHsA6vIdDtpn2W1hAkijAXIZVGZJdwLkMqjkBZAtTGkB2cVqLOZ+gOxiJZfaFqY8gG6cGXaxLfavnSe9CaTMgAyh7Au4NyCX0sWWd3IOGT/JABlClRZ2ciYZP/kAGUJllnRyPhk/KQEdnzEMrdbTcaL3nEBnPu3Gm0cdH9b4XWDHh7V8bvD4mF+vPrb8c42HRbsemIKfW2camjvgTkNzBywbmnv0ThzteqLN6av7Dx71/QmOb8fv6xBSbF5RJpCLobx6Dv6YqgqADKGk4yfQBGIoo55YWxhD6fQkuAYa3FD8px8L0K3n1rCGbn3i0f6MGG4CMZRIT9AtjKEseuJeA41sKJGeQ4Q/ZSw096XDVf/WMXeGRH77VOhXYXMLV3IUZdST4GX8IIaS6om+hY2wneWlk2MC1R5F2fVkmkDLcyjdKFpwn+sTB8kAFWBUhk5iQMuGwjJa3m2TftQpK6BcjErSqQDoTkN9JbVc4Gf/jGV6QO2MdpPU+MKwxsdziwA6idEWmE76bUKlT3aXArSC0WpP637/VO+mAAUBnSlpiwrfTKIyoAiMyt+HpD6gLpLGuX/NQIC2xjTmTY8GBXQ+KffIAkgXyGfjBZAAEkACSAJIAAkgASQBJIAEkACSABJAAkgASQAJIAEkgASQBJAAEkACSAJIAAkgASQBpE36CyMC+TVfM5NJAAAAAElFTkSuQmCC">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAEeElEQVR42u3dPY4TQRDFcbu10WYbrcQGSCRIJByAcE9ARkDIATgKB9iQgIwTbMgBSJA2QSJB4hak4PG0u/3R/V7V/6VjyXL5N1U94/HM9vrmbkPIvhRKQMBBwEHAQcBBwEHAQcBBwEHAQcBBCDgIOAg4CDgIOAg4CDgIOAg4CDgIAQcBBwEHAQcBBwEHAQcBB4mWq5wf++eX112vf/Hue8IqbZPcgqFXA1aC4zgviIRQAuIYYyKDkjg4ek28/PCn8ZVPD7c5lUTA0cKincK5uAQg4o2jzuK8II6DYk3EFUeFxRgTXUpMifjhEGQRlYgZjjUZCixaiHj5sMHhwiISEQ8ce2UoszhIxMKHAY6lDBcWdSL6PqRxWDeMAC1EF0eMhmHdQgoyBmf5QWb9GGSJI7AMLx9yY2WnTMFY1EeM2nwpyNBpIWr9oyADH+o4csoQ91GQgQ9dHMiQ9VGUC5TcR3Ycsud/BKdtLhwMFPHhUpCBD+k1BzI0CzIHB0sNi3KV6R+VtiE7XIpUCYhUcUbjYKAYle4q855xoTz/+n5t06+3n3tL1PtPXdfOkaFtVGQc3KpWwGlrjpBto+W77/UxsVDjcLDasCvjnM7BQYpFuUo87zQP485B23ApGvchJVNx/NsGaRtnaR5jJgudg4CDCOJgpvhOFjoHAQfpT6KnJvy4f7a26dXjbyiM7hw6C46KjINb0y47UoyVlu/eyAdrDgIOAg4CjtXVKHEs8qDOwblRx2IyVgg4CDgIOAg4CDiIZix/lX3z8XFt07dP93ypeTtHRcbBrSQyjpbvHh+sOQg4CDgIOAiHsos8Pdya/jC7dteliR9n2I2gLtg57B7d3vU1TLxV17AiM1aO30FFfICDgIOAg4Djv+VS+Ak9fiV06SU/nYOAg4CDOOFg2WG64KBzEHAQWRxMFseZQucgYjhoHi5FG4QjwM/3OhlWzJJnP6Bt6OKgediVsWTbG2gbojhoHl4FLDn3CdqGIg6ah1HpSuY9g7Yhh2NnD+gqQcsdFpavabnv/fI1B/+ZsnxBy9PIG59YvlOWKR13Tuc45aPWfaxtrftY21rxsbap/t33Pst+7izeXt/cTXnjnburcqNStbYxc81xynBBRvwFKT6UZcw/WuHIVrk4RXm/4dg1Ow6Gi+BAEeoc+BCUITRWMvvQlKG15sjpQ1aG3II0mw9lGZuJZ0grWT6aKt7506V7waN6xb8mLMsUrIVYyNjI/m8lsA8XGaJjpTJfrEfMXt/K54ilcURaghg1DCcc7i3ErmGY4disP11XmcjaOsnl50YbHF5E3FlY4thUH9CtQKRyVGV3fYIfDlkikVh44zhIZJiS+gkY66uZvHG0ELkElJYzcgEucouAo53IcVx6T86GufYxDo6jlZwr8a6HDYhjsJLA10hHxnE5KEkums+C40QrOf9CkRQHaQn3ISXgIOAg4CDgIOAg4CDgIOAg4CDgIAQcBBwEHAQcBBwEHAQcBBwEHAQchICDgIOAg4CDgIOAg4CDgIOEy18UxuI/dYuw+AAAAABJRU5ErkJggg==">
+<script>
+(function(){try{var m={name:"ระบบแบ่งเงิน",short_name:"แบ่งเงิน",start_url:location.href.split("#")[0],display:"standalone",background_color:"#0a111b",theme_color:"#0a111b",lang:"th",icons:[{src:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAEuUlEQVR42u3dMY7TQBSA4axFRUe1EhRINEg0HICSE9BRUHIAjsIBKCnoOAElB6BBokGiQeIWFDRos/ZOnNjz3pvvb2OJzfD5jbObOFf3Hzw6SGubLIEAEkACSABJAAkgASSAJIAEkAASQBJAAkgACSAJIAEkgASQAJIAEkACSABJAAkgASSAJIC0Rfcswb9+fnp+0vFPXn+zaIfD4WrMG0ydygUpgDZBA1N9QHu6GVBSZUB96QzCqCCgdW6evv1z0vE/PlyTVA3QSXROFXNBT5UYFQHUSOeyaM7EVINRekAtdPZxs05Sdka5AS3r6eXmVEmpDWUFlIVOeUYpAS3oiUmnkVFGQ8kApaZTklEmQHN6ctFpYZTI0ERPx+Z++Di/Q68wgUrSKTOKJnqMorKABtGT2lDcLezWhStJp2U7C7uXTfSkGEVh59BED0OlANGTy9BED0OVX8YPqyfL0w8E6PjcGlzP3CKEGkITPQylB0RPXkM+G6/kgIyf1ENoooehOlsYPemWqCegRG+bilzfZZziPG3jJ+NGNoVdFKVYrj53KBtw83r8+c3Co79efTx/Sbu8Z2hyPnXX03JA2EXrAGi08dOIY4WhCAvbfwK5+km9dHsD8tK92PJOziFDqMLLeCVtV0A3Bqzxs8UQ2nkXM4GUBJDL55JL3W0C2b9qLKYtTBkA2b+q7mJ9JpD9q8yS2sJ0VuN+4dz3lw8XHn325TccUSZQwAugZT0tB7gM6raFdb8AasSRzlCXhXUNJIAEkAASQNu/FvArxD2vo3d4IWYCCSABJIAEkASQAFKa0r+d48W7LwuPfn3/0v+xCbRST8sBGhdQIw6GABJAAkgCSAApUpv/HujJ62//vyvlx4fr7G8JuvVblf/V/and+Nl2uG+rCXQxPXc+aguj5/oixwAkAaSkgAa8UCi8sHsA6vIdDtpn2W1hAkijAXIZVGZJdwLkMqjkBZAtTGkB2cVqLOZ+gOxiJZfaFqY8gG6cGXaxLfavnSe9CaTMgAyh7Au4NyCX0sWWd3IOGT/JABlClRZ2ciYZP/kAGUJllnRyPhk/KQEdnzEMrdbTcaL3nEBnPu3Gm0cdH9b4XWDHh7V8bvD4mF+vPrb8c42HRbsemIKfW2camjvgTkNzBywbmnv0ThzteqLN6av7Dx71/QmOb8fv6xBSbF5RJpCLobx6Dv6YqgqADKGk4yfQBGIoo55YWxhD6fQkuAYa3FD8px8L0K3n1rCGbn3i0f6MGG4CMZRIT9AtjKEseuJeA41sKJGeQ4Q/ZSw096XDVf/WMXeGRH77VOhXYXMLV3IUZdST4GX8IIaS6om+hY2wneWlk2MC1R5F2fVkmkDLcyjdKFpwn+sTB8kAFWBUhk5iQMuGwjJa3m2TftQpK6BcjErSqQDoTkN9JbVc4Gf/jGV6QO2MdpPU+MKwxsdziwA6idEWmE76bUKlT3aXArSC0WpP637/VO+mAAUBnSlpiwrfTKIyoAiMyt+HpD6gLpLGuX/NQIC2xjTmTY8GBXQ+KffIAkgXyGfjBZAAEkACSAJIAAkgASQBJIAEkACSABJAAkgASQAJIAEkgASQBJAAEkACSAJIAAkgASQBpE36CyMC+TVfM5NJAAAAAElFTkSuQmCC",sizes:"192x192",type:"image/png",purpose:"any maskable"},{src:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAIAAAB7GkOtAAAMDElEQVR42u3dMW5UyxKA4RnL0WSOLDEBkhNLJF4AoVdA5oDQC2ApLMAhgTNW4JAFOEFyYokEybsgQ4Nkycw5p/tUV31ffN9w3zBdf9cZX9juzvYbAOo58RYACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAADQ2qm3gJSe76+WfcGLm0fvKslsd2d77wKmvDYgAGDWqwICACa+HiAAYOiLAQIAhr4YIABg6IsBAgDmvhIgAGDoiwECgLmPEiAAGP3IAAKAuY8SIAAY/cgAAoC5jxIgABj9y7i8fVnqpZ7uzmUAAcDoTzvl07RBBhAAEs791cf9WElQAgSAgUf/EBM/eA9kAAFgjNGfYOLH7IEMIABEHP3ph36cGMgAAkCI6V927q9bAg1AAFht9Jv7EUogAwgA/Ua/uR+wBDIgAAJg9Jv7pUsgAwKA6W/u1y2BBggARr/RLwMIAEa/uV+1BDIgAJj+Rn/dDGiAAGD0G/0ygABg+pv7JUugAQKA0W/0ywACQNXpb/QXz4AGpHTiLTD9Tf+Ulv1d8zeA2gAw+rEKWAUEgOzT3+iXAQ0QAMpNf6NfBjRAAHDxRwNkQABw8UcGNEAAyDf9jX4Z0ICa/Bio6W/617XI776fELUBYPRjFbAK2AAw/bEKYAMg4PQ3+mm6CtgDbACY/hRdBewBAoDpjwYQnUdAJaa/0c8EMx8HeRZkA8D0p+gqYA8QAEx/NICgPAJKO/2NfhY053GQZ0E2AEx/iq4C9gABwPRHAxAATH80AAHA9EcDWIsvgZNMf6OfziZ/Lew7YRsApj9FVwF7gABg+qMBCACmPxqAAJj+pj8agACY/qY/GoAAmP6mPxqAAJj+pj8agAA4Y+DziQCUuf47XWRtgCVAAEx/0x8NQABMf9MfDUAATH/THw1AAJwi8OlFAMpc/8FJQQAqfqZdoKi5BGiAAJj+pj8agAA4M+DzjABUuP47LWiAJUAATH/QAASgxvQHnCMBcEUCn3AEoMy1xdlAAywBAmD6gwZogAAAIACu/2AJQABMf9AABKDeGQCffwQgw/UfcMoEwPUHnAIEoMbFxOcepp0FS4AAWEvBiUMArL3gRCAAQ1xGfNZh/rmwBAgAAALg+g+WAAQAgDdtd2d774LrP0N7//3z/Bf59elbkP87T3fnR/3zFzePPgMCYPpj9CfJgAb04REQmP5tXxMBcP13/WeMSR2hAb4NFgBgnRltDxAAXP/BEiAAQJnrvyVAAHD9B0uAANDxEww4QQIAgABEctSO6fICnZcAT4EEAAABcP0HSwACAIAANL/+A06rANhYAWdKAAAQgNwbpasKrL4EeAokAAAIgOs/WAIQAAAEAEAAWGKL9PwHWvMUSAAAEADXf7AEWAIEAAABAEAApvL8B8LyFEgAABAAAAQg+DYKOHcCEJqHhuBECwAAAoA9FJw+AbAtAs61AAAgADZQwBkUAAAEYDAeFILTLQDYPcFJzOzUW0BMP6/fzX+RDw+/vZMgANQa/YcvJQPwKo+A/uERYabp3/Q1ccYFoC6PHUeZ/hrgPCIA1J3+GgACAIAAvMbDwcTXf0sATroAACAAM/jGCZxKAQBAAAAQgBH5XgicdwEAQAB4je+awNkUAAAEAAABAEAAABCA2PxMGDj1AsAb/JgBOKECAIAAACAAAAgAAAIAgAAAIAAACMCq/Pcg4OwLAG/w35iAcyoAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAEADp94CPn55mP8iP75eeydBAKg1+g9fSgZgIB4Bmf7RXxMQAMaY1BoAAkDF6a8BIAAACADFrv+WABAAAAQAAAEAQAAAEAAABAAAAQjn6e7cmwDOqQDkcXHz6E0AZ18AABAAAAQAAAEAQAAAGJm/EhKOsMiPGF7evngnEQCoNfoPX0oGWJ1HQKtNAYr/vvssOaECEIL/HoRVZopp5dQLANS9UWoAAgCAAECZ678lAAEAQADcCgFnUwAAEIAe/EwYOO8CAIAAACAAHPJdEziVAgCAAIzP90LgpAsAAAIAgABwyDdO4DwKQCoeDoIzLgAACAAAAsAhjx3BSRSAVDwiBKdbAAAQAOye4AwKAAACkJYHheBcCwA2UHD6BAAAAbAtAk60AGAPBedOAAAQAAAEYGBHPTS0jUJPR504XwAIAAACAIAALLg5egoEfXj+IwAACIAlAFz/Xf8FAAABAEAA5vEUCILw/EcAABAASwC4/rv+CwAAAjDYVQVwpgQgNBslOK0CAIAAuFbYWKE9X/8KAAACYAkA13/XfwEAQACGv7wATpAAhHbsjukTDH2mv+c/AgCAAFgCwPUfAQBAACwB4PqPAAAIAJYAcP0XADQATH8BAEAAsASA678AACAADLgE/Ph6HfBX+fDwu8O/1bG/yuXtS4d/q2N/lV+fvnX4t+rzq7j+C4BVF5wIJ0IAyiwB62q9BEx7/dZLwLTXb70ETHv91tfz/tf/3CdOADQg1pWnXQPmvHK7Bsx55XYNmPPK7Wa0hz8CQP61t0UD5r9miwbMf80WDZj/mi0mdfzpz4K2u7O9d2FBz/dXoZ4w/I+PXx4C5uTn9bsIo7/FtFr8N/39988jjn7XfwGoHoAgDYBRlmABWJBHQAub8Om0AmP6m/4CoAFg+pv+AgCAAFgCwPXf9V8ANABMfwTA2QCfcAQg0xIAOEcCUPez64qE67/pLwAaAKY/AuC0gM8zAlBkCXBmKD79Xf8FQAM0ANMfAajaAHBSEAAXKPDpRQCKXW2cIupMf9d/AdAADcD0RwA0QAMw/READdAATH8EwOkCn08EoNgS4IyRb/q7/guABmgApj8CoAEagOmPAGiABmD6IwAaoAGY/giABmgApj8CoAEagOnPNNvd2d67EMrz/dXk/+3l7Ys3kLCj3/S3AdDwhFgFMP0RAA0A0x8B0AAw/READQDTn798CRzdnO+EN74WZtXRb/rbANiseH6sApj+CIAGgOnPPzwCGsbMZ0Ebj4PoeGkw/W0ABNoDrAKY/giABoDpz2bjEdCI5j8L2ngcRJvLgelvAyD6HmAVwPTHBmAVsAoY/Ua/DQCrAKa/6W8DoOAeYBUw+k1/AaB0A2TA6Df9BQCrAKa/0S8AWAUw+k1/AaBaA2TA6Df9BQAZkAGj3+hPyI+B5rTsWfWjoqa/6W8DoPQeYBWoOfpNfwFABmTA6EcA0AAlyD73TX8BQAZkwOhHANAAGagx+k1/AUAGlKDc3Df6BQAZkAGjHwFAA5Qg+9w3/QVAAGTgqsOvogTR5r7RjwDQNQNKEGHuG/0IAGtmQAlWmftGPwJAlAYUL0H/P2TJ9EcAiJiBIjFY60/WM/oRAMbIQKYerP5nqRr9CAADZ2CsHsT507ONfgSAhCWIk4SAf1mCuY8AUCgDrdswyl+JY/QjAMhAOUY/AoASmPsgAMiA0Q8CgBKY+yAAyIDRDwKAEpj7CIB3ATEw9BEAUAJzHwEAMTD0EQAQA0MfAQAxMPQRANADEx8BgMpVMOsRAMjcBlMeAQAgiRNvAYAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAHT0B+17JNEG5qs3AAAAAElFTkSuQmCC",sizes:"512x512",type:"image/png",purpose:"any maskable"}]};
+var l=document.createElement("link");l.rel="manifest";l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/manifest+json"}));document.head.appendChild(l);}catch(e){}})();
+</script>
+</head>
+<body>
+<main>
+  <h1>💰 แบ่งเงินที่ได้รับ</h1>
+
+  <section class="card">
+    <label class="cap" for="income">ได้รับเงินสุทธิ (บาท)</label>
+    <input id="income" inputmode="decimal" autocomplete="off" placeholder="0.00">
+    <label class="cap" for="cash" style="margin-top:14px">เงินสดติดตัวตอนนี้ (บาท)</label>
+    <input id="cash" inputmode="decimal" autocomplete="off" placeholder="0.00" style="font-size:26px">
+    <div class="tot"><span>💼 รวมเงินที่นำมาแบ่ง</span><b id="tot">0.00</b></div>
+    <label class="cap" for="period" style="margin-top:14px">งวดหนี้ที่จ่าย</label>
+    <select id="period"></select>
+  </section>
+
+  <section class="card">
+    <div class="bar" id="bar"></div>
+    <div class="item"><span class="sw" style="background:var(--blu)"></span><span class="t"><b>1. ให้คุณแม่</b><small>ห้อง น้ำ ไฟ กิน เดินทาง</small></span><span class="a" id="a1">0.00</span></div>
+    <div class="item"><span class="sw" style="background:var(--red)"></span><span class="t"><b>2. จ่ายหนี้ + ค่าเน็ต</b><small id="s2"></small></span><span class="a" id="a2">0.00</span></div>
+    <div class="item"><span class="sw" style="background:var(--gold)"></span><span class="t"><b>3. DCA ซื้อ ETF</b><small id="s3"></small></span><span class="a" id="a3">0.00</span></div>
+    <div class="item" id="row5" style="display:none"><span class="sw" style="background:#b58cf0"></span><span class="t"><b>เก็บเงินสดติดตัว</b><small>ไว้ใช้จุกจิกเท่านั้น</small></span><span class="a" id="a5">0.00</span></div>
+    <div class="item big"><span class="sw" style="background:var(--grn)"></span><span class="t"><b>4. ฝากคุณแม่ (กองทุนสำรอง)</b><small>เงินที่เหลือทั้งหมด</small></span><span class="a" id="a4">0.00</span></div>
+    <div class="status" id="status"></div>
+    <div class="rec" id="rec"></div>
+    <label class="chk"><input type="checkbox" id="usep"><span>หักเก็บเงินสดติดตัวตามที่แนะนำ</span></label>
+    <p class="note">เรียงตามลำดับความสำคัญ ถ้าเงินไม่พอ ระบบลด DCA ก่อน แล้วค่อยลดกองทุนสำรอง</p>
+  </section>
+
+  <details class="set">
+    <summary>⚙️ ปรับค่า / ตารางงวดหนี้</summary>
+    <div class="grid">
+      <div class="tile"><label for="mom">ให้คุณแม่ (บาท)</label><input id="mom" inputmode="decimal" autocomplete="off"></div>
+      <div class="tile"><label for="dca">DCA ETF (บาท)</label><input id="dca" inputmode="decimal" autocomplete="off"></div>
+    </div>
+    <p class="note" style="margin:0 0 10px">ค่าเน็ต 428 บาททุกวันที่ 1 ถ้าตรงวันอาทิตย์เลื่อนเป็นวันจันทร์ · แตะงวดเพื่อแก้ยอดหนี้ ค่าที่แก้จะถูกจำไว้</p>
+    <div id="sched"></div>
+    <button id="reset">รีเซ็ตเป็นค่าเริ่มต้น</button>
+  </details>
+  <p class="note" id="saved"></p>
+</main>
+
+<script>
+(function(){
+var KEY='budget_alloc_v1';
+var OLD=['16 ต.ค. 69 (ศ.)','2 พ.ย. 69 (จ.)','16 พ.ย. 69 (จ.)','1 ธ.ค. 69 (อ.)','16 ธ.ค. 69 (พ.)','1 ม.ค. 70 (ศ.)','16 ม.ค. 70 (ส.)','1 ก.พ. 70 (จ.)','16 ก.พ. 70 (อ.)','16 มี.ค. 70 (อ.)','16 เม.ย. 70 (ศ.)','17 พ.ค. 70 (จ.)','16 มิ.ย. 70 (พ.)'];
+var LABELS=['16 ต.ค. 69 (ศ.)','2 พ.ย. 69 (จ.)','16 พ.ย. 69 (จ.)','1 ธ.ค. 69 (อ.)','16 ธ.ค. 69 (พ.)','1 ม.ค. 70 (ศ.)','16 ม.ค. 70 (ส.)','1 ก.พ. 70 (จ.)','16 ก.พ. 70 (อ.)','1 มี.ค. 70 (จ.)','16 มี.ค. 70 (อ.)','1 เม.ย. 70 (พฤ.)','16 เม.ย. 70 (ศ.)','1 พ.ค. 70 (ส.)','17 พ.ค. 70 (จ.)','1 มิ.ย. 70 (อ.)','16 มิ.ย. 70 (พ.)'];
+var DATES=['2026-10-16','2026-11-02','2026-11-16','2026-12-01','2026-12-16','2027-01-01','2027-01-16','2027-02-01','2027-02-16','2027-03-01','2027-03-16','2027-04-01','2027-04-16','2027-05-01','2027-05-17','2027-06-01','2027-06-16'];
+var FIELDS=['TikTok หลัก','TikTok ย่อย 1','TikTok ย่อย 2','SPayLater','Kredivo','ค่าเน็ต'];
+function defRows(){return [
+[1421.08,84.92,63.47,0,0,0],[0,0,0,672.62,255.21,428],[1269.40,84.92,63.47,0,0,0],[0,0,0,98.84,255.21,428],
+[1269.40,84.92,63.47,0,0,0],[0,0,0,88.81,242.26,428],[1269.40,84.92,63.47,0,0,0],[0,0,0,88.42,0,428],
+[1269.40,84.92,63.47,0,0,0],[0,0,0,0,0,428],[1269.40,84.92,63.47,0,0,0],[0,0,0,0,0,428],
+[1269.40,84.92,63.47,0,0,0],[0,0,0,0,0,428],[1051.68,84.92,63.47,0,0,0],[0,0,0,0,0,428],[0,84.60,63.20,0,0,0]];}
+function defState(){return {v:3,income:'8000',cash:'0',pocket:false,mom:'4000',dca:'2000',rows:defRows().map(function(r){return r.map(String)}),labels:LABELS.slice(),savedAt:null};}
+function $(id){return document.getElementById(id)}
+function n(v){var x=parseFloat(String(v).replace(/,/g,''));return isFinite(x)?x:0}
+function f(x){return x.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+
+var S;
+function load(){
+  var d=defState();
+  try{
+    var raw=localStorage.getItem(KEY); if(!raw) return d;
+    var p=JSON.parse(raw);
+    if(!p||!Array.isArray(p.rows)) return d;
+    var old=(Array.isArray(p.labels)&&p.labels.length===p.rows.length)?p.labels:(p.rows.length===OLD.length?OLD:null);
+    if(!old) return d;
+    var m={};
+    old.forEach(function(l,i){var r=p.rows[i];if(Array.isArray(r)&&r.length===6)m[l]=r.map(String)});
+    d.rows=LABELS.map(function(l,i){return m[l]||d.rows[i]});
+    d.income=String(p.income==null?d.income:p.income);
+    d.mom=String(p.mom==null?d.mom:p.mom);
+    d.pocket=!!p.pocket;
+    d.cash=String(p.cash==null?'0':p.cash);
+    if(p.v===3&&p.dca!=null)d.dca=String(p.dca); // เวอร์ชันเก่าใช้ 1000 → ตั้งใหม่เป็น 2000
+    d.savedAt=p.savedAt||null;
+    return d;
+  }catch(e){return d;}
+}
+function save(){
+  S.savedAt=Date.now();S.labels=LABELS.slice();
+  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  $('saved').textContent='💾 บันทึกอัตโนมัติ '+new Date(S.savedAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+}
+function debt(i){return S.rows[i].reduce(function(a,v){return a+n(v)},0)}
+
+var sel=$('period');
+LABELS.forEach(function(l,i){var o=document.createElement('option');o.value=i;o.textContent=l;sel.appendChild(o)});
+S=load();
+(function(){var t=new Date();t.setHours(0,0,0,0);var k=DATES.length-1;
+  for(var i=0;i<DATES.length;i++){if(new Date(DATES[i]+'T00:00:00')>=t){k=i;break}}
+  sel.value=k;})();
+$('income').value=S.income;$('cash').value=S.cash;$('mom').value=S.mom;$('dca').value=S.dca;
+
+var sched=$('sched');
+LABELS.forEach(function(l,i){
+  var d=document.createElement('details');d.className='p';
+  d.innerHTML='<summary><span>'+l+'</span><span id="sum'+i+'"></span></summary><div class="grid" style="padding-top:4px"></div>';
+  var g=d.querySelector('.grid');
+  FIELDS.forEach(function(name,j){
+    var t=document.createElement('div');t.className='tile';
+    var lb=document.createElement('label');lb.textContent=name;lb.htmlFor='r'+i+'_'+j;
+    var inp=document.createElement('input');inp.id='r'+i+'_'+j;inp.setAttribute('inputmode','decimal');inp.autocomplete='off';inp.value=S.rows[i][j];
+    inp.addEventListener('input',function(){S.rows[i][j]=inp.value;save();render()});
+    t.appendChild(lb);t.appendChild(inp);g.appendChild(t);
+  });
+  sched.appendChild(d);
+});
+
+function render(){
+  var P=+sel.value,I=n(S.income)+n(S.cash),mom=n(S.mom),want=n(S.dca),d=debt(P);
+  var rest=I-mom-d,dca,res,cash;
+  if(rest<0){dca=0;res=0;cash=Math.round(rest*100)/100}
+  else{dca=Math.min(want,rest);res=Math.round((rest-dca)*100)/100;cash=0}
+  $('tot').textContent=f(I);
+  $('a1').textContent=f(mom);$('a2').textContent=f(d);$('a3').textContent=f(dca);
+  var rec=(cash<0||I<=0)?0:Math.round(Math.min(I*0.05,res*0.25)/10)*10;
+  var pk=(S.pocket&&rec>0)?rec:0,res2=Math.round((res-pk)*100)/100;
+  $('a4').textContent=f(res2);$('a5').textContent=f(pk);$('row5').style.display=pk>0?'flex':'none';
+  $('rec').innerHTML=rec>0?'💡 <b>แนะนำเก็บติดตัวประมาณ '+f(rec)+' บาท</b><br>คิดจาก 5% ของเงินที่มี แต่ไม่เกิน 1 ใน 4 ของเงินที่เหลือหลังจ่ายแม่ หนี้ และ DCA · ค่ากิน/เดินทางคุณแม่ดูแลให้ในยอด 4,000 แล้ว จึงไม่ต้องถือมาก (ถือมากเสี่ยงกลับไปพนัน)':'💡 งวดนี้ไม่มีเงินเหลือพอ แนะนำเก็บติดตัว 0 บาท';
+  $('s2').textContent='งวด '+LABELS[P];
+  $('s3').textContent=dca<want?'ลดจากที่ตั้งไว้ '+f(want)+' เพราะเงินไม่พอ':'ยอดคงที่ตามที่ตั้งไว้';
+  var st=$('status');
+  if(cash<0){st.className='status bad';st.textContent='⚠️ เงินไม่พอจ่ายหนี้ ขาด '+f(-cash)+' บาท (ต้องมีอย่างน้อย '+f(mom+d)+')'}
+  else if(I<=0){st.className='status bad';st.textContent='กรอกยอดเงินที่ได้รับหรือเงินสดติดตัวด้านบน'}
+  else{st.className='status ok';st.textContent=pk>0?'✅ แบ่งครบ · เก็บเงินสดติดตัว '+f(pk)+' บาท':'✅ แบ่งครบพอดี เงินสดติดตัว 0 บาท'}
+  var tot=Math.max(I,1),cols=['var(--blu)','var(--red)','var(--gold)','#b58cf0','var(--grn)'],vals=[mom,d,dca,pk,res2],h='';
+  vals.forEach(function(v,k){h+='<i style="background:'+cols[k]+';width:'+(cash<0||I<=0?0:v/tot*100)+'%"></i>'});
+  $('bar').innerHTML=h;
+  LABELS.forEach(function(l,i){$('sum'+i).textContent=f(debt(i))});
+}
+$('income').addEventListener('input',function(){S.income=$('income').value;save();render()});
+$('usep').checked=!!S.pocket;
+$('usep').addEventListener('change',function(){S.pocket=$('usep').checked;save();render()});
+$('cash').addEventListener('input',function(){S.cash=$('cash').value;save();render()});
+$('mom').addEventListener('input',function(){S.mom=$('mom').value;save();render()});
+$('dca').addEventListener('input',function(){S.dca=$('dca').value;save();render()});
+sel.addEventListener('change',render);
+
+var rb=$('reset'),armed=null;
+rb.onclick=function(){
+  if(!armed){rb.textContent='แตะอีกครั้งเพื่อยืนยัน — ค่าที่แก้จะหายทั้งหมด';rb.className='warn';
+    armed=setTimeout(function(){armed=null;rb.textContent='รีเซ็ตเป็นค่าเริ่มต้น';rb.className=''},4000);return}
+  clearTimeout(armed);armed=null;
+  S=defState();
+  $('income').value=S.income;$('cash').value=S.cash;$('mom').value=S.mom;$('dca').value=S.dca;$('usep').checked=false;
+  for(var i=0;i<LABELS.length;i++)for(var j=0;j<6;j++)$('r'+i+'_'+j).value=S.rows[i][j];
+  save();render();rb.textContent='รีเซ็ตเป็นค่าเริ่มต้น';rb.className='';
+};
+if(S.savedAt)$('saved').textContent='💾 บันทึกไว้ล่าสุด '+new Date(S.savedAt).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+S.v=3;save();
+render();
+})();
+</script>
+</body>
+</html>
