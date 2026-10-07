@@ -45,9 +45,23 @@ details.p summary{display:flex;justify-content:space-between;font-size:14px}
 details.p summary span:last-child{color:var(--gold);font-family:'JetBrains Mono',ui-monospace,monospace}
 button{font:inherit;cursor:pointer;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--tx);padding:10px 16px;width:100%;margin:6px 0 12px}
 button.warn{border-color:var(--red);color:#ff9a8b}
-.pl{display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr 1.1fr;gap:4px;align-items:center;padding:9px 6px;border-bottom:1px solid var(--line);font-size:12.5px;cursor:pointer;border-radius:10px}
-.pl span:not(:first-child){font-family:'JetBrains Mono',ui-monospace,monospace;text-align:right}
-.pl.proj span{opacity:.5}.pl.h{color:var(--mut);font-size:11.5px;cursor:default}.pl.cur{background:#16294a;border-color:transparent}.pl.ms{color:var(--grn)}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--tile)}
+table.plan{width:100%;min-width:430px;border-collapse:separate;border-spacing:0;font-size:13px}
+.plan th,.plan td{padding:10px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+.plan th:first-child,.plan td:first-child{text-align:left;padding-left:12px}
+.plan th:last-child,.plan td:last-child{padding-right:12px}
+.plan thead th{background:#142540;color:var(--mut);font-size:11.5px;font-weight:600;position:sticky;top:0}
+.plan td:not(:first-child){font-family:'JetBrains Mono',ui-monospace,monospace}
+.plan tbody tr{cursor:pointer}
+.plan tbody tr:nth-child(even) td{background:rgba(255,255,255,.025)}
+.plan tbody tr.proj td{opacity:.5}
+.plan tbody tr.cur td{background:#16294a;opacity:1;box-shadow:inset 0 1px 0 var(--blu),inset 0 -1px 0 var(--blu)}
+.plan tbody tr.cur td:first-child{box-shadow:inset 3px 0 0 var(--blu),inset 0 1px 0 var(--blu),inset 0 -1px 0 var(--blu)}
+.plan tbody tr.ms td:last-child{color:var(--grn);font-weight:700}
+.plan td.zero{color:var(--mut)}
+.plan td.res{color:var(--grn)}
+.plan tfoot td{background:#142540;font-weight:700;border-bottom:0;color:var(--gold)}
+.plan tfoot td:first-child{color:var(--tx)}
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
 </style>
 <meta name="theme-color" content="#0a111b">
@@ -78,7 +92,7 @@ button.warn{border-color:var(--red);color:#ff9a8b}
   <section class="card">
     <div class="bar" id="bar"></div>
     <div class="item"><span class="sw" style="background:var(--blu)"></span><span class="t"><b>1. ให้คุณแม่</b><small>ห้อง น้ำ ไฟ กิน เดินทาง</small></span><span class="a" id="a1">0.00</span></div>
-    <div class="item"><span class="sw" style="background:var(--red)"></span><span class="t"><b>2. จ่ายหนี้ + ค่าเน็ต</b><small id="s2"></small></span><span class="a" id="a2">0.00</span></div>
+    <div class="item"><span class="sw" style="background:var(--red)"></span><span class="t"><b>2. จ่ายหนี้</b><small id="s2"></small></span><span class="a" id="a2">0.00</span></div>
     <div class="item"><span class="sw" style="background:var(--gold)"></span><span class="t"><b>3. DCA ลงทุนในพอร์ต</b><small id="s3"></small></span><span class="a" id="a3">0.00</span></div>
     <div class="item"><span class="sw" style="background:#b58cf0"></span><span class="t"><b>4. เงินสดติดตัว</b><small>ไว้ใช้จุกจิกเท่านั้น</small></span><span class="a" id="a5">0.00</span></div>
     <div class="item big"><span class="sw" style="background:var(--grn)"></span><span class="t"><b>5. ฝากคุณแม่ (กองทุนสำรอง)</b><small>เงินที่เหลือทั้งหมด</small></span><span class="a" id="a4">0.00</span></div>
@@ -89,8 +103,11 @@ button.warn{border-color:var(--red);color:#ff9a8b}
   <section class="card">
     <b>📅 แผนรายงวด</b>
     <div class="rec" id="sum" style="margin:10px 0 12px;border-color:#2f6b57;background:#10261f;color:#bfeedd"></div>
-    <div class="pl h"><span>งวด</span><span>รับเงิน</span><span>หนี้+เน็ต</span><span>ฝากแม่</span><span>สำรองสะสม</span></div>
-    <div id="plan"></div>
+    <div class="tw"><table class="plan">
+      <thead><tr><th>งวด</th><th>รับเงิน</th><th>หนี้</th><th>ฝากแม่</th><th>สำรองสะสม</th></tr></thead>
+      <tbody id="plan"></tbody>
+      <tfoot id="planfoot"></tfoot>
+    </table></div>
     <p class="note">✓ = กรอกยอดจริงแล้ว · จาง = ยังไม่กรอก ใช้ยอดคาดการณ์ · 🎯 = ถึงเป้าสำรอง 3,000 / 8,000 · 🏁 = งวดสุดท้ายที่จ่ายหนี้ · แตะแถวเพื่อไปงวดนั้น</p>
   </section>
 
@@ -101,7 +118,7 @@ button.warn{border-color:var(--red);color:#ff9a8b}
       <div class="tile"><label for="dca">DCA (บาท)</label><input id="dca" inputmode="decimal" autocomplete="off"></div>
       <div class="tile"><label for="def">รายได้คาดการณ์ต่องวด</label><input id="def" inputmode="decimal" autocomplete="off"></div>
     </div>
-    <p class="note" style="margin:0 0 10px">ยอดคาดการณ์ใช้เฉพาะงวดที่ยังไม่ได้กรอกยอดจริง · ค่าเน็ต 428 บาททุกวันที่ 1 ถ้าตรงวันอาทิตย์เลื่อนเป็นวันจันทร์ · แตะงวดเพื่อแก้ยอดหนี้</p>
+    <p class="note" style="margin:0 0 10px">ยอดคาดการณ์ใช้เฉพาะงวดที่ยังไม่ได้กรอกยอดจริง · จ่ายทุกวันที่ 1 และ 16 ถ้าตรงวันอาทิตย์เลื่อนเป็นวันจันทร์ · วันที่ 1 = TikTok ย่อย 1-2 + SPayLater + Kredivo · วันที่ 16 = TikTok หลัก · แตะงวดเพื่อแก้ยอดหนี้</p>
     <div id="sched"></div>
     <p class="note" style="margin:6px 0 4px">💾 ข้อมูลบันทึกในเครื่องอัตโนมัติทุกครั้งที่พิมพ์ ปิดแล้วเปิดใหม่ไม่หาย · ควรกดสำรองเก็บไว้อีกชั้น</p>
     <button id="exp">📤 สำรองข้อมูล (คัดลอก)</button>
@@ -115,29 +132,37 @@ button.warn{border-color:var(--red);color:#ff9a8b}
 <script>
 (function(){
 var KEY='budget_alloc_v2',BAK='budget_alloc_v2_bak',OLDKEY='budget_alloc_v1';
-var OLD=['16 ต.ค. 69 (ศ.)','2 พ.ย. 69 (จ.)','16 พ.ย. 69 (จ.)','1 ธ.ค. 69 (อ.)','16 ธ.ค. 69 (พ.)','1 ม.ค. 70 (ศ.)','16 ม.ค. 70 (ส.)','1 ก.พ. 70 (จ.)','16 ก.พ. 70 (อ.)','16 มี.ค. 70 (อ.)','16 เม.ย. 70 (ศ.)','17 พ.ค. 70 (จ.)','16 มิ.ย. 70 (พ.)'];
-var LABELS=['16 ต.ค. 69 (ศ.)','2 พ.ย. 69 (จ.)','16 พ.ย. 69 (จ.)','1 ธ.ค. 69 (อ.)','16 ธ.ค. 69 (พ.)','1 ม.ค. 70 (ศ.)','16 ม.ค. 70 (ส.)','1 ก.พ. 70 (จ.)','16 ก.พ. 70 (อ.)','1 มี.ค. 70 (จ.)','16 มี.ค. 70 (อ.)','1 เม.ย. 70 (พฤ.)','16 เม.ย. 70 (ศ.)','1 พ.ค. 70 (ส.)','17 พ.ค. 70 (จ.)','1 มิ.ย. 70 (อ.)','16 มิ.ย. 70 (พ.)'];
-var DATES=['2026-10-16','2026-11-02','2026-11-16','2026-12-01','2026-12-16','2027-01-01','2027-01-16','2027-02-01','2027-02-16','2027-03-01','2027-03-16','2027-04-01','2027-04-16','2027-05-01','2027-05-17','2027-06-01','2027-06-16'];
-var FIELDS=['TikTok หลัก','TikTok ย่อย 1','TikTok ย่อย 2','SPayLater','Kredivo','ค่าเน็ต'];
+var LABELS=['16 ต.ค. 69 (ศ.)','2 พ.ย. 69 (จ.)','16 พ.ย. 69 (จ.)','1 ธ.ค. 69 (อ.)','16 ธ.ค. 69 (พ.)','1 ม.ค. 70 (ศ.)','16 ม.ค. 70 (ส.)','1 ก.พ. 70 (จ.)','16 ก.พ. 70 (อ.)','1 มี.ค. 70 (จ.)','16 มี.ค. 70 (อ.)','1 เม.ย. 70 (พฤ.)','16 เม.ย. 70 (ศ.)','1 พ.ค. 70 (ส.)','17 พ.ค. 70 (จ.)','1 มิ.ย. 70 (อ.)'];
+var V2=['16 ต.ค. 69 (ศ.)','2 พ.ย. 69 (จ.)','16 พ.ย. 69 (จ.)','1 ธ.ค. 69 (อ.)','16 ธ.ค. 69 (พ.)','1 ม.ค. 70 (ศ.)','16 ม.ค. 70 (ส.)','1 ก.พ. 70 (จ.)','16 ก.พ. 70 (อ.)','1 มี.ค. 70 (จ.)','16 มี.ค. 70 (อ.)','1 เม.ย. 70 (พฤ.)','16 เม.ย. 70 (ศ.)','1 พ.ค. 70 (ส.)','17 พ.ค. 70 (จ.)','1 มิ.ย. 70 (อ.)','16 มิ.ย. 70 (พ.)'];
+var DATES=['2026-10-16','2026-11-02','2026-11-16','2026-12-01','2026-12-16','2027-01-01','2027-01-16','2027-02-01','2027-02-16','2027-03-01','2027-03-16','2027-04-01','2027-04-16','2027-05-01','2027-05-17','2027-06-01'];
+var FIELDS=['TikTok หลัก','TikTok ย่อย 1','TikTok ย่อย 2','SPayLater','Kredivo'];
+var NF=FIELDS.length;
 var N=LABELS.length;
+/* วันที่ 16 = TikTok หลัก · วันที่ 1 = ย่อย 1-2 + SPayLater + Kredivo */
 function defRows(){return [
-[1421.08,84.92,63.47,0,0,0],[0,0,0,672.62,255.21,428],[1269.40,84.92,63.47,0,0,0],[0,0,0,98.84,255.21,428],
-[1269.40,84.92,63.47,0,0,0],[0,0,0,88.81,242.26,428],[1269.40,84.92,63.47,0,0,0],[0,0,0,88.42,0,428],
-[1269.40,84.92,63.47,0,0,0],[0,0,0,0,0,428],[1269.40,84.92,63.47,0,0,0],[0,0,0,0,0,428],
-[1269.40,84.92,63.47,0,0,0],[0,0,0,0,0,428],[1051.68,84.92,63.47,0,0,0],[0,0,0,0,0,428],[0,84.60,63.20,0,0,0]];}
+[1421.08,84.92,63.47,0,0],[0,84.92,63.47,672.62,255.21],[1269.40,0,0,0,0],[0,84.92,63.47,98.84,255.21],
+[1269.40,0,0,0,0],[0,84.92,63.47,88.81,242.26],[1269.40,0,0,0,0],[0,84.92,63.47,88.42,0],
+[1269.40,0,0,0,0],[0,84.92,63.47,0,0],[1269.40,0,0,0,0],[0,84.92,63.47,0,0],
+[1269.40,0,0,0,0],[0,84.92,63.47,0,0],[1051.68,0,0,0,0],[0,84.60,63.20,0,0]];}
 function blanks(){var a=[];for(var i=0;i<N;i++)a.push('');return a}
-function defState(){return {v:4,defInc:'9000',inc:blanks(),cash:blanks(),mom:'4000',dca:'2000',rows:defRows().map(function(r){return r.map(String)}),savedAt:null};}
+function defState(){return {v:5,labels:LABELS,defInc:'9000',inc:blanks(),cash:blanks(),mom:'4000',dca:'2000',rows:defRows().map(function(r){return r.map(String)}),savedAt:null};}
 function $(id){return document.getElementById(id)}
 function n(v){var x=parseFloat(String(v).replace(/,/g,''));return isFinite(x)?x:0}
 function f(x){return x.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function short(l){return l.split(' (')[0]}
 
 function mapRows(p,d){
-  var old=(Array.isArray(p.labels)&&p.labels.length===p.rows.length)?p.labels:(p.rows.length===OLD.length?OLD:null);
-  if(!old)return;
-  var m={};
-  old.forEach(function(l,i){var r=p.rows[i];if(Array.isArray(r)&&r.length===6)m[l]=r.map(String)});
-  d.rows=LABELS.map(function(l,i){return m[l]||d.rows[i]});
+  if(!(p.v>=5&&p.rows.length===N))return;
+  var ok=p.rows.every(function(r){return Array.isArray(r)&&r.length===NF});
+  if(ok)d.rows=p.rows.map(function(r){return r.map(String)});
+}
+function mapByLabel(arr,p){
+  if(!Array.isArray(arr))return null;
+  if(arr.length===N&&!(Array.isArray(p.labels)&&p.labels.length!==N))return arr.map(String);
+  var src=Array.isArray(p.labels)&&p.labels.length===arr.length?p.labels:(arr.length===V2.length?V2:null);
+  if(!src)return null;
+  var m={};src.forEach(function(l,i){m[l]=String(arr[i])});
+  return LABELS.map(function(l){return m[l]==null?'':m[l]});
 }
 function parseState(raw){
   var d=defState(),p=JSON.parse(raw);
@@ -146,8 +171,8 @@ function parseState(raw){
   d.defInc=String(p.defInc==null?d.defInc:p.defInc);
   d.mom=String(p.mom==null?d.mom:p.mom);
   d.dca=String(p.dca==null?d.dca:p.dca);
-  if(Array.isArray(p.inc)&&p.inc.length===N)d.inc=p.inc.map(String);
-  if(Array.isArray(p.cash)&&p.cash.length===N)d.cash=p.cash.map(String);
+  var inc=mapByLabel(p.inc,p),cash=mapByLabel(p.cash,p);
+  if(inc)d.inc=inc;if(cash)d.cash=cash;
   d.savedAt=p.savedAt||null;
   return d;
 }
@@ -206,7 +231,7 @@ LABELS.forEach(function(l,i){
 
 function applyState(){
   $('mom').value=S.mom;$('dca').value=S.dca;$('def').value=S.defInc;
-  for(var i=0;i<N;i++)for(var j=0;j<6;j++)$('r'+i+'_'+j).value=S.rows[i][j];
+  for(var i=0;i<N;i++)for(var j=0;j<NF;j++)$('r'+i+'_'+j).value=S.rows[i][j];
   setInputs();
 }
 function calc(i){
@@ -245,9 +270,11 @@ function render(){
   var ph='',m1=false,m2=false;
   plan.forEach(function(x,i){
     var tag=i===last?' 🏁':'';if(!m1&&x.cum>=3000){m1=true;tag+=' 🎯'}if(!m2&&x.cum>=8000){m2=true;tag+='🎯'}
-    ph+='<div class="pl'+(i===P?' cur':'')+(x.has?'':' proj')+(tag.indexOf('🎯')>=0?' ms':'')+'" data-i="'+i+'"><span>'+(x.has?'✓ ':'')+short(LABELS[i])+tag+'</span><span>'+f(x.inc)+'</span><span>'+f(x.d)+'</span><span>'+f(x.res)+'</span><span>'+f(x.cum)+'</span></div>';
+    ph+='<tr class="'+(i===P?'cur':'')+(x.has?'':' proj')+(tag.indexOf('🎯')>=0?' ms':'')+'" data-i="'+i+'"><td>'+(x.has?'✓ ':'')+short(LABELS[i])+tag+'</td><td>'+f(x.inc)+'</td><td'+(x.d>0?'':' class="zero"')+'>'+f(x.d)+'</td><td class="res">'+f(x.res)+'</td><td>'+f(x.cum)+'</td></tr>';
   });
   $('plan').innerHTML=ph;
+  var ti=0,td=0,tr=0;plan.forEach(function(x){ti+=x.inc;td+=x.d;tr+=x.res});
+  $('planfoot').innerHTML='<tr><td>รวมทุกงวด</td><td>'+f(ti)+'</td><td>'+f(td)+'</td><td>'+f(tr)+'</td><td>'+f(plan[plan.length-1].cum)+'</td></tr>';
   LABELS.forEach(function(l,i){$('sum'+i).textContent=f(debt(i))});
 }
 
@@ -257,7 +284,7 @@ $('mom').addEventListener('input',function(){S.mom=$('mom').value;save();render(
 $('dca').addEventListener('input',function(){S.dca=$('dca').value;save();render()});
 $('def').addEventListener('input',function(){S.defInc=$('def').value;save();$('income').placeholder=f(n(S.defInc));render()});
 sel.addEventListener('change',function(){setInputs();render()});
-$('plan').addEventListener('click',function(e){var r=e.target.closest('.pl');if(!r)return;sel.value=r.getAttribute('data-i');setInputs();render();window.scrollTo({top:0,behavior:'smooth'})});
+$('plan').addEventListener('click',function(e){var r=e.target.closest('tr[data-i]');if(!r)return;sel.value=r.getAttribute('data-i');setInputs();render();window.scrollTo({top:0,behavior:'smooth'})});
 
 var rb=$('reset'),armed=null;
 rb.onclick=function(){
